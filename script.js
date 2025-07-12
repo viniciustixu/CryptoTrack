@@ -7,11 +7,16 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+const crypto = "solana";
+const currency = "usd"; // "usd","brl","eur","jpy","btc","eth","bnb"...
+
+
 const getCurrentPrice = async () => {
+
   try {
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+    const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${crypto}&vs_currencies=${currency}`);
     const data = await response.json();
-    return data['solana'].usd;
+    return data[crypto][currency];
   } catch (error) {
     console.error('Erro ao buscar o preço:', error);
     return null;
@@ -28,15 +33,16 @@ const startMonitoring = async () => {
   const currentPrice = await getCurrentPrice();
   if (currentPrice === null) return rl.close();
 
-  console.log(`Preço atual da moeda: $${currentPrice}`);
+  console.log(`Preço atual de ${crypto}: ${currentPrice} ${currency}`);
 
   const minPrice = await promptUser('Digite o preço mínimo desejado: ');
   const maxPrice = await promptUser('Digite o preço máximo desejado: ');
 
-  console.log(`Monitorando moeda... Range definido: (${minPrice} ~ ${maxPrice})`);
 
   const checkPrice = async () => {
+    const hora = new Date().toLocaleTimeString();
     const price = await getCurrentPrice();
+
     if (price === null) return;
 
     if (price >= maxPrice || price <= minPrice) {
@@ -47,10 +53,11 @@ const startMonitoring = async () => {
         sound: true,
       });
     } else {
-      console.log(`Preço atual: $${price}. Aguardando... Range: (${minPrice} ~ ${maxPrice})`);
+      console.log(`${hora}: Monitorando moeda... Range definido: (${minPrice} ~ ${maxPrice})(${currency}) (${crypto})`);
     }
   };
 
+  checkPrice();
   setInterval(checkPrice, 60000);
   rl.close();
 };
